@@ -2,6 +2,7 @@
 # Provider-specific chronology and clock rendering stay here; reusable mechanisms come from pinned Common.
 .DEFAULT_GOAL := all
 CC ?= cc
+CXX ?= g++
 PKG_CONFIG ?= pkg-config
 BUILD_DIR ?= build
 RESOURCE_NAME := Binary Digital Clock
@@ -11,7 +12,7 @@ COMMON_VERSION := 1.19.80
 COMMON_BUILD_DIR := $(abspath $(BUILD_DIR))/common
 COMMON_ARCHIVE := $(COMMON_BUILD_DIR)/libinfiltratr-common.a
 DEPENDENCIES := 
-SOURCES := $(shell find src -type f -name '*.c' | LC_ALL=C sort)
+SOURCES := $(shell find src -type f -name '*.cpp' | LC_ALL=C sort)
 TARGET := $(BUILD_DIR)/$(RESOURCE_NAME).so
 ifneq ($(strip $(DEPENDENCIES)),)
 DEP_CFLAGS := $(shell $(PKG_CONFIG) --cflags $(DEPENDENCIES))
@@ -28,6 +29,7 @@ CFLAGS += -std=c11 -fPIC -fvisibility=hidden -ffunction-sections -fdata-sections
     -Wall -Wextra -Wpedantic -Werror -Wformat=2 -Wshadow -Wstrict-prototypes \
     -Wmissing-prototypes -fstack-protector-strong -fno-common \
     -ffile-prefix-map=$(CURDIR)=. -fdebug-prefix-map=$(CURDIR)=.
+CXXFLAGS += $(filter-out -std=c11 -Wstrict-prototypes -Wmissing-prototypes,$(CFLAGS)) -std=c++20
 LDLIBS += $(DEP_LIBS) -lm -ldl -pthread
 .PHONY: common-check
 common-check:
@@ -44,7 +46,7 @@ $(COMMON_ARCHIVE): common-check
 .PHONY: all check audit-authorities clean
 all: $(COMMON_ARCHIVE)
 	@mkdir -p "$(BUILD_DIR)"
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(DEP_CFLAGS) -shared $(SOURCES) $(COMMON_ARCHIVE) \
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEP_CFLAGS) -shared $(SOURCES) $(COMMON_ARCHIVE) \
 	    -Wl,--version-script=exports.map -Wl,-z,defs -Wl,--gc-sections \
 	    $(LDFLAGS) -o "$(TARGET)" $(LDLIBS)
 check: all
