@@ -50,6 +50,6 @@ Each package owns only this provider and its passive documentation. Its `Replace
 
 The installed package contains only the clock `.so` under
 `/System/Resources/Clocks/` and a three-page illustrated explanatory PDF
-under `/System/Resources/Documentation/Clock-Binary/`.
+under `/System/Resources/Documentation/Clock-Binary.pdf`.
 Engineering documents remain in GitHub; native source/profiling/checksum
 metadata is stored in Debian control fields instead of installed BUILD-INFO.
