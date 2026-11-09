@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 /*
- * Independent fixed-unit clock resource. Compiled separately for five stable
- * time-system IDs; the implementation contains no Calendar or Common clock
- * formatting dependency. Common supplies the ABI and validates callbacks.
+ * Independent binary digital clock. Common provides the temporal ABI and
+ * local civil-day phase; this provider formats it and schedules the next tick.
  */
 #include <infiltratr/temporal_clock_resource.h>
 #include "clock-civil.h"
@@ -12,12 +11,6 @@
 #include <string.h>
 
 #define CLOCK_MICROSECONDS_PER_SECOND INT64_C(1000000)
-#define CLOCK_MICROSECONDS_PER_DAY INT64_C(86400000000)
-
-static uint64_t ticks_at(uint64_t phase, uint64_t per_day)
-{
-    return phase * per_day / (uint64_t)CLOCK_MICROSECONDS_PER_DAY;
-}
 
 static void to_binary(unsigned value, unsigned digits, char *dest)
 {
@@ -37,8 +30,6 @@ static bool clock_render(const InfiltratrTemporalClockProvider *provider,
     const char *sep = vertical ? "\n" : ":";
 
     (void)provider; (void)locale; (void)latitude; (void)longitude;
-    (void)instant; (void)offset; (void)seconds; (void)vertical;
-    (void)sep;
     {
         const uint64_t whole = clock_civil_local_phase(instant, offset) /
             (uint64_t)CLOCK_MICROSECONDS_PER_SECOND;
@@ -64,16 +55,17 @@ static bool clock_next_tick(const InfiltratrTemporalClockProvider *provider,
                             int64_t instant, int32_t offset, bool seconds,
                             double latitude, double longitude, uint32_t *milliseconds)
 {
-    uint64_t phase, units, tick, boundary, remaining, result;
-    (void)provider; (void)latitude; (void)longitude; (void)offset; (void)seconds;
+    (void)provider; (void)latitude; (void)longitude;
     if (milliseconds == NULL) return false;
-    units = seconds ? UINT64_C(86400) : UINT64_C(1440);
-    phase = clock_civil_local_phase(instant, offset);
-    tick = ticks_at(phase, units);
-    boundary = ((tick + 1U) * (uint64_t)CLOCK_MICROSECONDS_PER_DAY +
-                 units - 1U) / units;
-    remaining = boundary > phase ? boundary - phase : 1U;
-    result = (remaining + UINT64_C(999)) / UINT64_C(1000);
+
+    /* The displayed binary digits change on civil second/minute boundaries.
+     * Calculate that boundary directly instead of scaling an entire day. */
+    const uint64_t unit_us = seconds
+        ? (uint64_t)CLOCK_MICROSECONDS_PER_SECOND
+        : UINT64_C(60) * (uint64_t)CLOCK_MICROSECONDS_PER_SECOND;
+    const uint64_t phase = clock_civil_local_phase(instant, offset);
+    const uint64_t remaining = unit_us - phase % unit_us;
+    const uint64_t result = (remaining + UINT64_C(999)) / UINT64_C(1000);
     if (result == 0U || result > UINT32_MAX) return false;
     *milliseconds = (uint32_t)result;
     return true;
