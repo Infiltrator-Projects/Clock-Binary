@@ -12,7 +12,7 @@ The clock owns both its notation and next-visible-tick scheduling. It does not r
 
 ## Status
 
-**Independent source, native installation and releases.** This repository contains the implementation of `binary`, the supporting code it needs, a one-provider `Makefile` and focused regression fixtures. The copy is based on Common 1.19.78 at `8d60662114e3`; the original Common source remains unchanged.
+**Independent source, native installation and releases.** This repository contains the implementation of `binary`, the supporting code it needs, a one-provider `Makefile` and focused regression fixtures. The initial extraction was based on Common 1.19.78; current builds link the authoritative Common submodule pinned by the Makefile.
 
 Run `make` to produce `build/Binary Digital Clock.so` and `make check` to run this provider's checks. The Makefile builds the pinned Common static archive from the `common` Git submodule; initialise it with `git submodule update --init -- common` before running `make`. Independent releases now provide a portable amd64 Debian package, a lightweight hardware-native network installer; GitHub supplies the automatic tag source ZIP. The original Common source is retained.
 
@@ -46,12 +46,7 @@ Run the downloaded `.run --profile aggressive` as an ordinary user. It provision
 
 Each package owns only this provider and its passive documentation. Its `Replaces` declaration transfers this module from `infiltrator-calendar-resources` on existing machines; other modules and Common source remain intact. Native package versions use `+native1` so a same-version generic package does not replace a local optimized build. See [packaging details](docs/PACKAGING.md).
 
-## Installed two-file documentation standard
+## User manual
 
-The installed package contains only the clock `.so` under
-`/System/Resources/Clocks/` and a three-page illustrated explanatory PDF
-under `/System/Resources/Documentation/Clock-Binary.pdf`.
-Engineering documents remain in GitHub; native source/profiling/checksum
-metadata is stored in Debian control fields instead of installed BUILD-INFO.
+The installed PDF is generated from [docs/GUIDE.json](docs/GUIDE.json) using the pinned Common renderer. The package owns only its native clock module and this manual. Engineering records remain in GitHub.
 
-The native RUN downloads the exact provider commit and pinned Common submodule, verifies their identities and builds locally. No source or binary payload is embedded.
